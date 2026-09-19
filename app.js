@@ -1,7 +1,7 @@
 ﻿
 /**
  * ==========================================================================
- * 🏋️‍♂️ IRONTRACK UK - GYM WEIGHT & PROGRESSIVE OVERLOAD TRACKER
+ * Loadr | Track your exercise and overload progress
  * ==========================================================================
  * Fully functional, client-side, localStorage-backed workout progression app.
  * Fixed Timezone: Europe/London (handles GMT & BST).
