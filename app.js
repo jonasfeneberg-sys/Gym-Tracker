@@ -46,8 +46,15 @@
             };
           }
           if (Array.isArray(parsed.exercises)) {
-            state.exercises = parsed.exercises;
-          }
+  state.exercises = parsed.exercises.map(ex => ({
+    ...ex,
+    overloadIncrement:
+      Number(ex.overloadIncrement) > 0
+        ? Number(ex.overloadIncrement)
+        : Number(parsed.settings?.overloadIncrement) || 2.5,
+    sessions: Array.isArray(ex.sessions) ? ex.sessions : []
+  }));
+}
         }
       }
     } catch (err) {
@@ -193,10 +200,11 @@
       return;
     }
 
-    const newExercise = {
+   const newExercise = {
       id: 'ex_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       name: trimmed,
       createdAt: new Date().toISOString(),
+      overloadIncrement: Number(state.settings.overloadIncrement) || 2.5,
       sessions: [] // Empty session history
     };
 
@@ -342,21 +350,37 @@
     const sessions = ex.sessions || [];
     const hasSessions = sessions.length > 0;
 
-    // Progressive Overload Suggestion (Appears ONLY after at least 1 session is logged)
-    let overloadBadgeHtml = '';
-    if (hasSessions) {
-      const lastSession = sessions[sessions.length - 1];
-      const lastWeight = Number(lastSession.weight);
-      const increment = Number(state.settings.overloadIncrement);
-      const nextTarget = (lastWeight + increment).toFixed(1);
+// Individual Overload Increment for this exercise
+const increment = Number(ex.overloadIncrement) > 0
+  ? Number(ex.overloadIncrement)
+  : Number(state.settings.overloadIncrement) || 2.5;
 
-      overloadBadgeHtml = `
-        <div class="overload-target-badge" title="Suggested next weight: Last session (${lastWeight} kg) + Overload Increment (+${increment} kg)">
-          <span>Next Session Target:</span>
-          <span class="target-highlight">${nextTarget} kg</span>
-          <span>(+${increment} kg overload)</span>
-        </div>
-      `;
+ex.overloadIncrement = increment;
+
+let overloadBadgeHtml = `
+  <div class="overload-target-badge">
+    <span>Overload Increment:</span>
+    <span class="target-highlight">+${increment} kg</span>
+`;
+
+if (hasSessions) {
+  const lastSession = sessions[sessions.length - 1];
+  const lastWeight = Number(lastSession.weight);
+  const nextTarget = (lastWeight + increment).toFixed(1);
+
+  overloadBadgeHtml += `
+    <span>•</span>
+    <span>Next Target: <strong>${nextTarget} kg</strong></span>
+  `;
+} else {
+  overloadBadgeHtml += `
+    <span style="color: var(--text-muted);">Set for this exercise</span>
+  `;
+}
+
+overloadBadgeHtml += `
+  </div>
+`;
     }
 
     // Default logging date to current UK date
@@ -428,7 +452,33 @@
           </button>
         </div>
       </div>
+<div class="exercise-overload-settings">
+  <div class="exercise-overload-label">
+    <span>Exercise Overload Increment</span>
+    <span class="exercise-overload-hint">
+      Manual - used for this exercise only
+    </span>
+  </div>
 
+  <div class="exercise-overload-control">
+    <input
+      type="number"
+      class="form-control form-control-sm exercise-overload-input"
+      value="${increment}"
+      min="0.25"
+      max="50"
+      step="0.25"
+    />
+    <span class="exercise-overload-unit">kg</span>
+
+    <button
+      type="button"
+      class="btn btn-secondary btn-sm btn-save-exercise-overload"
+    >
+      Save
+    </button>
+  </div>
+</div>
       <form class="session-log-form" data-exercise-id="${ex.id}" autocomplete="off">
         <div class="form-row">
           <div class="form-group">
@@ -468,7 +518,37 @@
           </button>
         </div>
       </form>
+const overloadInput = card.querySelector('.exercise-overload-input');
+const saveOverloadBtn = card.querySelector('.btn-save-exercise-overload');
 
+function saveExerciseOverload() {
+  const value = parseFloat(overloadInput.value);
+
+  if (isNaN(value) || value <= 0) {
+    showToast('Please enter a valid overload increment', 'danger');
+    return;
+  }
+
+  ex.overloadIncrement = value;
+  saveState();
+  renderExerciseCard(ex);
+
+  showToast(
+    `Saved +${value} kg overload for ${ex.name}`,
+    'success'
+  );
+}
+
+if (saveOverloadBtn && overloadInput) {
+  saveOverloadBtn.addEventListener('click', saveExerciseOverload);
+
+  overloadInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveExerciseOverload();
+    }
+  });
+}
       ${chartSectionHtml}
 
       <div class="history-section">
@@ -559,21 +639,24 @@
       actualWeights.push(Number(s.weight));
     });
 
-    // Projected Overload Target Dataset
-    const projectedWeights = new Array(actualWeights.length).fill(null);
-    const increment = Number(state.settings.overloadIncrement);
-    const lastWeight = actualWeights[actualWeights.length - 1];
-    const targetNextWeight = Number((lastWeight + increment).toFixed(1));
+const projectedWeights = new Array(actualWeights.length).fill(null);
 
-    projectedWeights[projectedWeights.length - 1] = lastWeight;
-    labels.push(`Next Target (+${increment} kg)`);
+const increment = Number(ex.overloadIncrement) > 0
+  ? Number(ex.overloadIncrement)
+  : Number(state.settings.overloadIncrement) || 2.5;
+
+const lastWeight = actualWeights[actualWeights.length - 1];
+const targetNextWeight = Number((lastWeight + increment).toFixed(1));
+
+projectedWeights[projectedWeights.length - 1] = lastWeight;
+labels.push(`Next Target (+${increment} kg)`);
     actualWeights.push(null);
     projectedWeights.push(targetNextWeight);
 
     const ctx = canvas.getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 180);
-    gradient.addColorStop(0, 'rgba(0, 229, 255, 0.35)');
-    gradient.addColorStop(1, 'rgba(0, 229, 255, 0.01)');
+    gradient.addColorStop(0, 'rgba(155, 179, 199, 0.30)');
+    gradient.addColorStop(1, 'rgba(155, 179, 199, 0.01)');
 
     const newChart = new Chart(ctx, {
       type: 'line',
@@ -583,10 +666,10 @@
           {
             label: 'Logged Weight (kg)',
             data: actualWeights,
-            borderColor: '#00e5ff',
+            borderColor: '#9bb3c7',
             backgroundColor: gradient,
             borderWidth: 2.5,
-            pointBackgroundColor: '#00e5ff',
+            pointBackgroundColor: '#9bb3c7',
             pointBorderColor: '#080c14',
             pointBorderWidth: 2,
             pointRadius: 4.5,
@@ -597,10 +680,10 @@
           {
             label: 'Overload Target (kg)',
             data: projectedWeights,
-            borderColor: '#00f59b',
+            borderColor: '#7f9bad',
             borderWidth: 2,
             borderDash: [5, 5],
-            pointBackgroundColor: '#00f59b',
+            pointBackgroundColor: '#7f9bad',
             pointBorderColor: '#080c14',
             pointBorderWidth: 2,
             pointRadius: 5,
@@ -622,7 +705,7 @@
             position: 'top',
             labels: {
               boxWidth: 12,
-              color: '#94a3b8',
+              color: '#aeb8c2',
               font: {
                 family: "'Plus Jakarta Sans', sans-serif",
                 size: 11
@@ -632,7 +715,7 @@
           tooltip: {
             backgroundColor: '#0f1726',
             titleColor: '#f8fafc',
-            bodyColor: '#00e5ff',
+            bodyColor: '#9bb3c7',
             borderColor: 'rgba(255, 255, 255, 0.1)',
             borderWidth: 1,
             padding: 10,
