@@ -517,37 +517,6 @@ overloadBadgeHtml += `
           </button>
         </div>
       </form>
-const overloadInput = card.querySelector('.exercise-overload-input');
-const saveOverloadBtn = card.querySelector('.btn-save-exercise-overload');
-
-function saveExerciseOverload() {
-  const value = parseFloat(overloadInput.value);
-
-  if (isNaN(value) || value <= 0) {
-    showToast('Please enter a valid overload increment', 'danger');
-    return;
-  }
-
-  ex.overloadIncrement = value;
-  saveState();
-  renderExerciseCard(ex);
-
-  showToast(
-    `Saved +${value} kg overload for ${ex.name}`,
-    'success'
-  );
-}
-
-if (saveOverloadBtn && overloadInput) {
-  saveOverloadBtn.addEventListener('click', saveExerciseOverload);
-
-  overloadInput.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      saveExerciseOverload();
-    }
-  });
-}
       ${chartSectionHtml}
 
       <div class="history-section">
@@ -559,7 +528,40 @@ if (saveOverloadBtn && overloadInput) {
         </ul>
       </div>
     `;
+    const overloadInput = card.querySelector('.exercise-overload-input');
+    const saveOverloadBtn = card.querySelector('.btn-save-exercise-overload');
 
+    function saveExerciseOverload() {
+      const value = parseFloat(overloadInput.value);
+
+      if (isNaN(value) || value <= 0) {
+        showToast('Please enter a valid overload increment', 'danger');
+        return;
+      }
+
+      ex.overloadIncrement = value;
+      saveState();
+      renderExerciseCard(ex);
+
+      showToast(
+        `Saved +${value} kg overload for ${ex.name}`,
+        'success'
+      );
+    }
+
+    if (saveOverloadBtn && overloadInput) {
+      saveOverloadBtn.addEventListener('click', saveExerciseOverload);
+
+      overloadInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveExerciseOverload();
+        }
+      });
+    }
+
+    bindCardEvents(card, ex);
+    return card;
     bindCardEvents(card, ex);
     return card;
   }
