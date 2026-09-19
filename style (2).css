@@ -12,7 +12,7 @@
 
 :root {
   /* --- THEME COLORS (Edit these to personalise your website style!) --- */
-  --bg-base: #000000;               /* Deep gym obsidian background */
+  --bg-base: #000000;               /* Deep gym obsidian background */ 
   --bg-surface: #0b0d10;            /* Secondary container background */
   --bg-card: #0d0f12;               /* Exercise card background */
   --bg-card-hover: #12161b;         /* Card hover state */
