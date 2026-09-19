@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ?????? IRONTRACK UK - ATHLETIC PROGRESSIVE OVERLOAD STYLESHEET
+   ?????? IRONTRACK - Track your exercise and overload progress
    ==========================================================================
    ?? CUSTOMISATION GUIDE:
    You can easily customise the website style, colors, fonts, and appearance
@@ -12,24 +12,24 @@
 
 :root {
   /* --- THEME COLORS (Edit these to personalise your website style!) --- */
-  --bg-base: #080c14;               /* Deep gym obsidian background */
-  --bg-surface: #0f1726;            /* Secondary container background */
-  --bg-card: #121c2e;               /* Exercise card background */
-  --bg-card-hover: #162238;         /* Card hover state */
+  --bg-base: #000000;               /* Deep gym obsidian background */
+  --bg-surface: #111330;            /* Secondary container background */
+  --bg-card: #3b3948;               /* Exercise card background */
+  --bg-card-hover: #1c1453;         /* Card hover state */
   --bg-input: #172338;              /* Input field background */
-  --bg-input-focus: #1d2c47;        /* Focused input background */
+  --bg-input-focus: #262627;        /* Focused input background */
 
   /* --- ACCENT COLORS --- */
-  --accent-primary: #00e5ff;        /* Electric neon cyan accent */
-  --accent-primary-hover: #33ebff;  /* Hover state for primary accent */
+  --accent-primary: #7b8ded;        /* Electric neon cyan accent */
+  --accent-primary-hover: #6c83fa;  /* Hover state for primary accent */
   --accent-primary-glow: rgba(0, 229, 255, 0.3);
 
-  --accent-secondary: #00f59b;      /* Cyber lime accent (success / overload) */
-  --accent-secondary-hover: #33f7af;
+  --accent-secondary: #219532;      /* Cyber lime accent (success / overload) */
+  --accent-secondary-hover: #2d8e3b;
   --accent-secondary-glow: rgba(0, 245, 155, 0.25);
 
-  --accent-danger: #f43f5e;         /* Crimson red for deletes/danger */
-  --accent-danger-hover: #fb7185;
+  --accent-danger: #600608;         /* Crimson red for deletes/danger */
+  --accent-danger-hover: #7a080b;
   --accent-danger-glow: rgba(244, 63, 94, 0.25);
 
   --accent-warning: #f59e0b;        /* Amber warning */
@@ -38,7 +38,7 @@
   --text-primary: #f8fafc;          /* High contrast bright text */
   --text-secondary: #94a3b8;        /* Muted descriptive text */
   --text-muted: #64748b;            /* Subdued placeholder/hint text */
-  --text-on-accent: #080c14;        /* Dark text over bright accent buttons */
+  --text-on-accent: #000000;        /* Dark text over bright accent buttons */
 
   /* --- BORDERS & SHADOWS --- */
   --border-subtle: rgba(255, 255, 255, 0.08);
@@ -180,7 +180,7 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% { opacity: 1; transform: scale(1); }
+  0%, 70% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.85); }
 }
 
