@@ -22,7 +22,7 @@
     version: 2,
     settings: {
       overloadIncrement: 2.5, // Default overload step in kg (fully user-configurable in settings)
-      timezone: 'Europe/London'
+      timezone: 'Europe/Berlin'
     },
     exercises: [] // Zero pre-loaded exercises; user builds library from scratch
   };
@@ -42,7 +42,7 @@
           if (parsed.settings && typeof parsed.settings === 'object') {
             state.settings = {
               overloadIncrement: parseFloat(parsed.settings.overloadIncrement) || 2.5,
-              timezone: 'Europe/London'
+              timezone: 'Europe/Berlin'
             };
           }
           if (Array.isArray(parsed.exercises)) {
@@ -88,12 +88,12 @@
   }
 
   /* ==========================================================================
-     UK TIMEZONE & LIVE CLOCK (Europe/London)
+     Germany TIMEZONE & LIVE CLOCK (Europe/Berlin)
      ========================================================================== */
   function getTodayUkDate() {
     try {
       const formatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/London',
+        timeZone: 'Europe/Berlin',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
@@ -131,21 +131,21 @@
     function tick() {
       const now = new Date();
       try {
-        const timeFormatter = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Europe/London',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          timeZoneName: 'short'
-        });
+const timeFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Berlin',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  timeZoneName: 'short'
+});
 
-        const dateFormatter = new Intl.DateTimeFormat('en-GB', {
-          timeZone: 'Europe/London',
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        });
+const dateFormatter = new Intl.DateTimeFormat('en-GB', {
+  timeZone: 'Europe/Berlin',
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric'
+});
 
         if (timeElem) timeElem.textContent = timeFormatter.format(now);
         if (dateElem) dateElem.textContent = dateFormatter.format(now);
@@ -381,7 +381,6 @@ if (hasSessions) {
 overloadBadgeHtml += `
   </div>
 `;
-    }
 
     // Default logging date to current UK date
     const defaultDate = getTodayUkDate();
@@ -1001,7 +1000,7 @@ labels.push(`Next Target (+${increment} kg)`);
         if (parsed.settings) {
           state.settings = {
             overloadIncrement: parseFloat(parsed.settings.overloadIncrement) || 2.5,
-            timezone: 'Europe/London'
+            timeZone: 'Europe/Berlin',
           };
         }
         if (Array.isArray(parsed.exercises)) {
