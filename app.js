@@ -409,27 +409,26 @@ let overloadBadgeHtml = `
   <div class="overload-target-badge">
     <span>Overload Increment:</span>
     <span class="target-highlight">+${increment} kg</span>
+  </div>
 `;
 
 if (hasSessions) {
-const lastSession = sessions[sessions.length - 1];
-const lastWeight = Number(lastSession.weight);
-const suggestedWeight = getSuggestedWeight(ex);
+  const frequencyForBadge = Number(ex.overloadFrequency) > 0
+    ? Math.floor(Number(ex.overloadFrequency))
+    : 2;
 
-const frequency = Number(ex.overloadFrequency) > 0
-  ? Math.floor(Number(ex.overloadFrequency))
-  : 2;
+  const shouldIncrease = sessions.length % frequencyForBadge === 0;
+  const nextTarget = Number(suggestedWeight).toFixed(1);
 
-const shouldIncrease = sessions.length % frequency === 0;
-const nextTarget = Number(suggestedWeight).toFixed(1);
-
-<div class="overload-badge">
-  <span>${shouldIncrease ? 'Next Target' : 'Maintain'}</span>
-  <strong>
-    ${nextTarget} kg${shouldIncrease ? ` (+${increment} kg)` : ''}
-  </strong>
-</div>
-`;
+  overloadBadgeHtml += `
+    <div class="overload-badge">
+      <span>${shouldIncrease ? 'Next Target' : 'Maintain'}</span>
+      <strong>
+        ${nextTarget} kg${shouldIncrease ? ` (+${increment} kg)` : ''}
+      </strong>
+    </div>
+  `;
+}
 
     // Default logging date to current German date
     const defaultDate = getTodayUkDate();
@@ -546,25 +545,6 @@ const nextTarget = Number(suggestedWeight).toFixed(1);
 
 </div>
 
-  <div class="exercise-overload-control">
-    <input
-      type="number"
-      class="form-control form-control-sm exercise-overload-input"
-      value="${increment}"
-      min="0.25"
-      max="50"
-      step="0.25"
-    />
-    <span class="exercise-overload-unit">kg</span>
-
-    <button
-      type="button"
-      class="btn btn-secondary btn-sm btn-save-exercise-overload"
-    >
-      Save
-    </button>
-  </div>
-</div>
       <form class="session-log-form" data-exercise-id="${ex.id}" autocomplete="off">
         <div class="form-row">
           <div class="form-group">
@@ -672,8 +652,6 @@ if (saveOverloadBtn && overloadInput && frequencyInput) {
 
     bindCardEvents(card, ex);
     return card;
-    bindCardEvents(card, ex);
-    return card;
   }
 
   function renderExerciseCard(ex) {
@@ -762,17 +740,21 @@ const frequency =
     ? Math.floor(Number(ex.overloadFrequency))
     : 2;
 
-const completedWorkouts = sessions.length;
-const overloadSteps = Math.floor(
-  completedWorkouts / frequency
-);
+const shouldIncrease = sessions.length % frequency === 0;
 
 const targetNextWeight = Number(
-  (lastWeight + overloadSteps * increment).toFixed(1)
+  (
+    lastWeight +
+    (shouldIncrease ? increment : 0)
+  ).toFixed(1)
 );
 
 projectedWeights[projectedWeights.length - 1] = lastWeight;
-labels.push(`Next Target (+${increment} kg)`);
+labels.push(
+  shouldIncrease
+    ? `Next Target (+$DIL1 kg)`
+    : 'Maintain Current Weight'
+);
     actualWeights.push(null);
     projectedWeights.push(targetNextWeight);
 
