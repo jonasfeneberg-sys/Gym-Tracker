@@ -500,49 +500,50 @@ if (hasSessions) {
         </div>
       </div>
 <div class="exercise-overload-settings">
+  <div class="overload-setting-row">
+    <label for="overload-${ex.id}">
+      Increment
+    </label>
 
-  <div class="exercise-overload-label">
-    <span>Exercise Overload Settings</span>
-    <span class="exercise-overload-hint">
-      Manual settings for this exercise
-    </span>
+    <div class="overload-input-with-unit">
+      <input
+        type="number"
+        id="overload-${ex.id}"
+        class="form-control form-control-sm exercise-overload-input"
+        value="${increment}"
+        min="0.1"
+        step="0.5"
+      />
+
+      <span class="overload-input-unit">kg</span>
+    </div>
   </div>
 
-  <div class="exercise-overload-control">
+  <div class="overload-setting-row">
+    <label for="frequency-${ex.id}">
+      Frequency
+    </label>
 
-    <input
-      type="number"
-      class="form-control form-control-sm exercise-overload-input"
-      value="${increment}"
-      min="0.25"
-      max="50"
-      step="0.25"
-      aria-label="Overload increment"
-    />
+    <div class="overload-input-with-unit">
+      <input
+        type="number"
+        id="frequency-${ex.id}"
+        class="form-control form-control-sm exercise-overload-frequency-input"
+        value="${frequency}"
+        min="1"
+        step="1"
+      />
 
-    <span class="exercise-overload-unit">kg</span>
-
-    <input
-      type="number"
-      class="form-control form-control-sm exercise-overload-frequency-input"
-      value="${frequency}"
-      min="1"
-      max="100"
-      step="1"
-      aria-label="Overload frequency"
-    />
-
-    <span class="exercise-overload-unit">workouts</span>
-
-    <button
-      type="button"
-      class="btn btn-secondary btn-sm btn-save-exercise-overload"
-    >
-      Save
-    </button>
-
+      <span class="overload-input-unit">Workouts</span>
+    </div>
   </div>
 
+  <button
+    type="button"
+    class="btn btn-secondary btn-save-exercise-overload"
+  >
+    Save
+  </button>
 </div>
 
       <form class="session-log-form" data-exercise-id="${ex.id}" autocomplete="off">
