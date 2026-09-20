@@ -1106,3 +1106,44 @@ body {
     max-height: 95vh;
   }
 }
+/* Overload settings layout */
+.exercise-overload-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Each label + input unit row */
+.overload-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Label on the left */
+.overload-setting-row label {
+  min-width: 145px;
+  margin: 0;
+}
+
+/* Input and unit stay together */
+.overload-input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* Input */
+.overload-input-with-unit input {
+  width: 100%;
+  max-width: 140px;
+}
+
+/* kg / Workouts text */
+.overload-input-unit {
+  white-space: nowrap;
+  color: #b8c4d6;
+  font-size: 0.9rem;
+}
