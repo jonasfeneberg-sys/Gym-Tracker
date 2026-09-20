@@ -49,10 +49,16 @@
   state.exercises = parsed.exercises.map(ex => ({
     ...ex,
     overloadIncrement:
-      Number(ex.overloadIncrement) > 0
-        ? Number(ex.overloadIncrement)
-        : Number(parsed.settings?.overloadIncrement) || 2.5,
-    sessions: Array.isArray(ex.sessions) ? ex.sessions : []
+  Number(ex.overloadIncrement) > 0
+    ? Number(ex.overloadIncrement)
+    : Number(parsed.settings?.overloadIncrement) || 2.5,
+
+overloadFrequency:
+  Number(ex.overloadFrequency) > 0
+    ? Math.floor(Number(ex.overloadFrequency))
+    : 2,
+
+sessions: Array.isArray(ex.sessions) ? ex.sessions : []
   }));
 }
         }
@@ -204,8 +210,9 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
       id: 'ex_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
       name: trimmed,
       createdAt: new Date().toISOString(),
-      overloadIncrement: Number(state.settings.overloadIncrement) || 2.5,
-      sessions: [] // Empty session history
+overloadIncrement: Number(state.settings.overloadIncrement) || 2.5,
+overloadFrequency: 2,
+sessions: []
     };
 
     state.exercises.unshift(newExercise);
@@ -342,6 +349,40 @@ const dateFormatter = new Intl.DateTimeFormat('en-GB', {
       }
     });
   }
+  /* ==========================================================================
+   SUGGESTED WEIGHT CALCULATION
+   ========================================================================== */
+
+function getSuggestedWeight(ex) {
+  const sessions = Array.isArray(ex.sessions) ? ex.sessions : [];
+
+  if (sessions.length === 0) {
+    return '';
+  }
+
+  const lastSession = sessions[sessions.length - 1];
+  const lastWeight = Number(lastSession.weight);
+
+  if (!Number.isFinite(lastWeight)) {
+    return '';
+  }
+
+  const increment = Number(ex.overloadIncrement) > 0
+    ? Number(ex.overloadIncrement)
+    : Number(state.settings.overloadIncrement) || 2.5;
+
+  const frequency = Number(ex.overloadFrequency) > 0
+    ? Math.floor(Number(ex.overloadFrequency))
+    : 2;
+
+  const shouldIncrease = sessions.length % frequency === 0;
+
+  const suggestedWeight = shouldIncrease
+    ? lastWeight + increment
+    : lastWeight;
+
+  return Number(suggestedWeight.toFixed(2));
+}
   function createExerciseCardElement(ex) {
     const card = document.createElement('article');
     card.className = 'exercise-card';
@@ -355,7 +396,14 @@ const increment = Number(ex.overloadIncrement) > 0
   ? Number(ex.overloadIncrement)
   : Number(state.settings.overloadIncrement) || 2.5;
 
+const frequency = Number(ex.overloadFrequency) > 0
+  ? Math.floor(Number(ex.overloadFrequency))
+  : 2;
+
 ex.overloadIncrement = increment;
+ex.overloadFrequency = frequency;
+
+const suggestedWeight = getSuggestedWeight(ex);
 
 let overloadBadgeHtml = `
   <div class="overload-target-badge">
@@ -364,25 +412,26 @@ let overloadBadgeHtml = `
 `;
 
 if (hasSessions) {
-  const lastSession = sessions[sessions.length - 1];
-  const lastWeight = Number(lastSession.weight);
-  const nextTarget = (lastWeight + increment).toFixed(1);
+const lastSession = sessions[sessions.length - 1];
+const lastWeight = Number(lastSession.weight);
+const suggestedWeight = getSuggestedWeight(ex);
 
-  overloadBadgeHtml += `
-    <span>•</span>
-    <span>Next Target: <strong>${nextTarget} kg</strong></span>
-  `;
-} else {
-  overloadBadgeHtml += `
-    <span style="color: var(--text-muted);">Set for this exercise</span>
-  `;
-}
+const frequency = Number(ex.overloadFrequency) > 0
+  ? Math.floor(Number(ex.overloadFrequency))
+  : 2;
 
-overloadBadgeHtml += `
-  </div>
+const shouldIncrease = sessions.length % frequency === 0;
+const nextTarget = Number(suggestedWeight).toFixed(1);
+
+<div class="overload-badge">
+  <span>${shouldIncrease ? 'Next Target' : 'Maintain'}</span>
+  <strong>
+    ${nextTarget} kg${shouldIncrease ? ` (+${increment} kg)` : ''}
+  </strong>
+</div>
 `;
 
-    // Default logging date to current UK date
+    // Default logging date to current German date
     const defaultDate = getTodayUkDate();
 
     // Session History HTML
@@ -452,12 +501,50 @@ overloadBadgeHtml += `
         </div>
       </div>
 <div class="exercise-overload-settings">
+
   <div class="exercise-overload-label">
-    <span>Exercise Overload Increment</span>
+    <span>Exercise Overload Settings</span>
     <span class="exercise-overload-hint">
-      Manual - used for this exercise only
+      Manual settings for this exercise
     </span>
   </div>
+
+  <div class="exercise-overload-control">
+
+    <input
+      type="number"
+      class="form-control form-control-sm exercise-overload-input"
+      value="${increment}"
+      min="0.25"
+      max="50"
+      step="0.25"
+      aria-label="Overload increment"
+    />
+
+    <span class="exercise-overload-unit">kg</span>
+
+    <input
+      type="number"
+      class="form-control form-control-sm exercise-overload-frequency-input"
+      value="${frequency}"
+      min="1"
+      max="100"
+      step="1"
+      aria-label="Overload frequency"
+    />
+
+    <span class="exercise-overload-unit">workouts</span>
+
+    <button
+      type="button"
+      class="btn btn-secondary btn-sm btn-save-exercise-overload"
+    >
+      Save
+    </button>
+
+  </div>
+
+</div>
 
   <div class="exercise-overload-control">
     <input
@@ -488,7 +575,16 @@ overloadBadgeHtml += `
           <div class="form-group">
             <label for="weight-${ex.id}">Weight (kg)</label>
             <div class="weight-input-group">
-              <input type="number" id="weight-${ex.id}" class="form-control form-control-sm input-weight" step="0.25" min="0" placeholder="e.g. 50" required />
+              <input
+  type="number"
+  id="weight-${ex.id}"
+  class="form-control form-control-sm input-weight"
+  step="0.25"
+  min="0"
+  value="${suggestedWeight}"
+  placeholder="e.g. 50"
+  required
+/>
               <button type="button" class="btn-scan-ocr" data-exercise-id="${ex.id}" data-exercise-name="${escapeHtml(ex.name)}" title="Scan weight plate or machine stack with Camera OCR">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
@@ -528,37 +624,51 @@ overloadBadgeHtml += `
         </ul>
       </div>
     `;
-    const overloadInput = card.querySelector('.exercise-overload-input');
-    const saveOverloadBtn = card.querySelector('.btn-save-exercise-overload');
+const overloadInput = card.querySelector('.exercise-overload-input');
+const frequencyInput = card.querySelector('.exercise-overload-frequency-input');
+const saveOverloadBtn = card.querySelector('.btn-save-exercise-overload');
 
-    function saveExerciseOverload() {
-      const value = parseFloat(overloadInput.value);
+function saveExerciseOverload() {
+  const incrementValue = parseFloat(overloadInput.value);
+  const frequencyValue = parseInt(frequencyInput.value, 10);
 
-      if (isNaN(value) || value <= 0) {
-        showToast('Please enter a valid overload increment', 'danger');
-        return;
-      }
+  if (isNaN(incrementValue) || incrementValue <= 0) {
+    showToast('Please enter a valid overload increment.', 'error');
+    return;
+  }
 
-      ex.overloadIncrement = value;
-      saveState();
-      renderExerciseCard(ex);
+  if (isNaN(frequencyValue) || frequencyValue < 1) {
+    showToast('Please enter a valid workout frequency.', 'error');
+    return;
+  }
 
-      showToast(
-        `Saved +${value} kg overload for ${ex.name}`,
-        'success'
-      );
+  ex.overloadIncrement = incrementValue;
+  ex.overloadFrequency = frequencyValue;
+
+  saveState();
+  renderExerciseCard(ex);
+
+  showToast(
+    `Saved +${incrementValue} kg every ${frequencyValue} workouts for ${ex.name}`,
+    'success'
+  );
+}
+
+if (saveOverloadBtn && overloadInput && frequencyInput) {
+  saveOverloadBtn.addEventListener('click', saveExerciseOverload);
+
+  overloadInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      saveExerciseOverload();
     }
+  });
 
-    if (saveOverloadBtn && overloadInput) {
-      saveOverloadBtn.addEventListener('click', saveExerciseOverload);
-
-      overloadInput.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveExerciseOverload();
-        }
-      });
+  frequencyInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      saveExerciseOverload();
     }
+  });
+}
 
     bindCardEvents(card, ex);
     return card;
@@ -647,7 +757,19 @@ const increment = Number(ex.overloadIncrement) > 0
   : Number(state.settings.overloadIncrement) || 2.5;
 
 const lastWeight = actualWeights[actualWeights.length - 1];
-const targetNextWeight = Number((lastWeight + increment).toFixed(1));
+const frequency =
+  Number(ex.overloadFrequency) > 0
+    ? Math.floor(Number(ex.overloadFrequency))
+    : 2;
+
+const completedWorkouts = sessions.length;
+const overloadSteps = Math.floor(
+  completedWorkouts / frequency
+);
+
+const targetNextWeight = Number(
+  (lastWeight + overloadSteps * increment).toFixed(1)
+);
 
 projectedWeights[projectedWeights.length - 1] = lastWeight;
 labels.push(`Next Target (+${increment} kg)`);
