@@ -1365,34 +1365,24 @@
   /* ==========================================================================
      SETTINGS PANEL & JSON PERSISTENCE
      ========================================================================== */
-  function openSettingsModal() {
-    const modal = document.getElementById('settingsModal');
-    const stepInput = document.getElementById('settingsOverloadInput');
-    if (stepInput) stepInput.value = state.settings.overloadIncrement;
-    renderWorkoutDaysList();
-    if (modal) modal.classList.add('active');
-  }
+function openSettingsModal() {
+  const modal = document.getElementById('settingsModal');
+
+  renderWorkoutDaysList();
+
+  if (modal) modal.classList.add('active');
+}
 
   function closeSettingsModal() {
     const modal = document.getElementById('settingsModal');
     if (modal) modal.classList.remove('active');
   }
 
-  function saveSettings() {
-    const stepInput = document.getElementById('settingsOverloadInput');
-    const val = parseFloat(stepInput.value);
-
-    if (isNaN(val) || val <= 0) {
-      showToast('Please enter a valid overload increment (greater than 0)', 'danger');
-      return;
-    }
-
-    state.settings.overloadIncrement = val;
-    saveState();
-    updateSummaryBar();
-    closeSettingsModal();
-    showToast(`Default overload increment set to +${val} kg`, 'success');
-  }
+function saveSettings() {
+  saveState();
+  closeSettingsModal();
+  showToast('Settings saved', 'success');
+}
 
   function resetAllData() {
     const confirmed = window.confirm(
