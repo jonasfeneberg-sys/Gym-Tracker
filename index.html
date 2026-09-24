@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Loadr | Track your exercise and overload progress</title>
+  <meta name="description" content="Gym weight tracking and progressive overload system. With in-browser camera tracking." />
+  <meta name="theme-color" content="#080c14" />
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono with System Fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js pinned exact version from cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <!-- Tesseract.js pinned exact version from cdnjs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js"></script>
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="loadr.css" />
+</head>
+<body>
+  <div class="app-container">
+
+<!-- Application Header -->
+<header class="app-header">
+  <div class="header-top">
+    <div class="brand-area">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="m6.5 6.5 11 11" />
+          <path d="m21 21-1-1" />
+          <path d="m3 3 1 1" />
+          <path d="m18 22 4-4" />
+          <path d="m2 6 4-4" />
+          <path d="m3 10 7-7" />
+          <path d="m14 21 7-7" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">Loa<span class="brand-accent">dr</span></h1>
+        <p class="brand-subtitle">Track your exercises and overload progress</p>
+      </div>
+    </div>
+
+    <!-- Live Time & Date Badge -->
+    <div
+      class="uk-clock-badge"
+      id="ukClockBadge"
+      title="Live clock in Europe/Berlin timezone"
+    >
+      <div class="uk-pulse-dot"></div>
+      <div class="clock-details">
+        <span class="uk-time-text" id="ukLiveTime">--:--:--</span>
+        <span class="uk-date-text" id="ukLiveDate">Loading date...</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+    <!-- ── Folder sidebar + Main content layout ── -->
+    <div class="app-layout">
+
+    <!-- Workout Split Folder Sidebar (rendered by JS) -->
+    <nav class="folder-sidebar" id="folderSidebar" aria-label="Workout split folders"></nav>
+
+    <!-- Main Workout Content -->
+    <main class="main-content">
+
+      <!-- Add Exercise Bar -->
+      <section class="add-exercise-section">
+        <form id="addExerciseForm" class="add-exercise-form" autocomplete="off">
+          <div class="input-wrapper">
+            <span class="input-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              id="newExerciseInput"
+              class="form-control"
+              placeholder="Add your exercise (e.g. Chest Press Machine, ...)"
+              required
+            />
+          </div>
+          <button type="submit" id="addExerciseBtn" class="btn btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Exercise
+          </button>
+        </form>
+
+        <!-- Search / Filter Bar -->
+        <div class="filter-bar" id="filterBar" style="display: none;">
+          <input
+            type="text"
+            id="searchExercisesInput"
+            class="filter-input"
+            placeholder="Search your exercises"
+          />
+          <div class="filter-count" id="filterCount">Showing all exercises</div>
+        </div>
+
+        <!-- Organize Toolbar: Add Workout Day / Rearrange / Finish -->
+        <div class="organize-toolbar" id="organizeToolbar" style="display: none;">
+          <button type="button" class="btn btn-secondary btn-sm" id="addWorkoutDayQuickBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Workout Day
+          </button>
+          <div class="organize-toolbar-right">
+            <button type="button" class="btn btn-secondary btn-sm" id="rearrangeBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="3" y1="15" x2="21" y2="15"/>
+              </svg>
+              Rearrange
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="finishRearrangeBtn" style="display: none;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Finish
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Rearrange Mode Banner -->
+      <div class="rearrange-banner" id="rearrangeBanner" style="display: none;" role="status">
+        <span class="rearrange-badge">Rearrange Mode</span>
+        <span class="rearrange-hint">Use the dropdown on each exercise card to assign it to a workout day, then click <strong>Finish</strong> to lock the layout.</span>
+      </div>
+
+      <!-- Empty State -->
+      <section class="empty-state" id="emptyState">
+        <div class="empty-icon-glow">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m6.5 6.5 11 11" />
+            <path d="m21 21-1-1" />
+            <path d="m3 3 1 1" />
+            <path d="m18 22 4-4" />
+            <path d="m2 6 4-4" />
+            <path d="m3 10 7-7" />
+            <path d="m14 21 7-7" />
+          </svg>
+        </div>
+        <h2>No Exercises Added Yet</h2>
+        <p>
+          Your gym tracker is clean and ready. Add the exact exercises and machines you train with above.
+        </p>
+        <div class="empty-features-list">
+          <div class="feature-item">
+            <span class="feature-bullet">✓</span>
+            <span><strong>Camera OCR:</strong> Take a photo of weight plates or machine pin stacks to auto-fill weights.</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-bullet">✓</span>
+            <span><strong>Progressive Overload:</strong> Automatically calculates your next target weight each session.</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-bullet">✓</span>
+            <span><strong>Progression Charts:</strong> Clear visual progress graphs render for each exercise after your first session.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Exercise Cards Grid -->
+      <section class="exercises-grid" id="exercisesGrid" style="display: none;"></section>
+
+    </main>
+    </div><!-- /.app-layout -->
+
+<!-- Footer -->
+<footer class="app-footer">
+  <button
+    type="button"
+    class="btn btn-secondary footer-settings-btn"
+    id="openSettingsBtn"
+    title="Overload & App Settings"
+  >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82V9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+    <span class="btn-text">Settings</span>
+  </button>
+  <p></p>
+</footer>
+
+  </div>
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Weight Photo OCR Scanner -->
+  <div class="modal-backdrop" id="ocrModal" role="dialog" aria-modal="true" aria-labelledby="ocrModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="ocrModalTitle">Weight Photo Scanner (OCR)</h3>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+            Target: <span id="ocrTargetExerciseName" style="color: var(--accent-primary); font-weight: 700;">Exercise</span>
+          </p>
+        </div>
+        <button type="button" class="modal-close-btn" id="closeOcrModalBtn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <p style="font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+          Take a photo or upload an image of the weight plate or machine stack pin.
+        </p>
+
+        <div class="ocr-dropzone" id="ocrDropzone">
+          <input type="file" id="ocrFileInput" accept="image/*" capture="environment" />
+          <div id="ocrDropzonePrompt">
+            <div class="ocr-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            </div>
+            <p style="font-weight: 600; font-size: 0.95rem; margin-bottom: 4px;">Tap to Take Photo or Browse</p>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">Supports phone camera & picture upload</p>
+          </div>
+
+          <div class="ocr-preview-wrap" id="ocrPreviewContainer" style="display: none;">
+            <img id="ocrPreviewImage" class="ocr-preview-img" alt="Captured weight preview" />
+            <div style="margin-top: 10px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="ocrRetakeBtn">Choose Different Image</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="ocr-loading" id="ocrStatusArea" style="display: none;">
+          <div class="spinner"></div>
+          <span id="ocrStatusText" style="font-size: 0.88rem; color: var(--accent-primary);">Scanning image with Tesseract OCR...</span>
+        </div>
+
+        <div id="ocrResultsArea" style="display: none;">
+          <label class="settings-label" style="font-size: 0.8rem;">Detected Numbers in Image:</label>
+          <div class="ocr-pills" id="ocrDetectedPills"></div>
+          <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 6px;">Tap any number above to select it.</p>
+        </div>
+
+        <div class="settings-group">
+          <label for="ocrConfirmedWeightInput" class="settings-label">Confirmed Weight (kg):</label>
+          <div class="stepper-group">
+            <button type="button" class="btn-stepper" id="ocrWeightMinus">&minus;</button>
+            <input type="number" id="ocrConfirmedWeightInput" step="0.25" min="0" max="999" placeholder="e.g. 50" class="form-control text-center" style="text-align: center; font-family: var(--font-mono); font-size: 1.1rem; font-weight: 700;" />
+            <button type="button" class="btn-stepper" id="ocrWeightPlus">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelOcrBtn">Cancel</button>
+        <button type="button" class="btn btn-primary" id="applyOcrWeightBtn">Apply Weight</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Settings -->
+  <div class="modal-backdrop" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="settingsModalTitle">Settings</h3>
+        <button type="button" class="modal-close-btn" id="closeSettingsModalBtn" aria-label="Close modal">&times;</button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- JSON Backup & Restore -->
+        <div class="settings-group">
+          <span class="settings-label">JSON Data Backup &amp; Restore</span>
+          <span class="settings-tip">
+            Export your entire workout library and history to a JSON file, or restore on another device.
+          </span>
+          <div class="json-actions-grid">
+            <button type="button" class="btn btn-secondary btn-sm" id="exportJsonBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export JSON
+            </button>
+
+            <input type="file" id="importJsonFileInput" accept=".json,application/json" style="display: none;" />
+            <button type="button" class="btn btn-secondary btn-sm" id="triggerImportBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
+              </svg>
+              Restore JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Danger Zone: Reset All Data -->
+        <div class="danger-zone">
+          <span class="settings-label" style="color: var(--accent-danger);">Reset All Data</span>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 6px 0 12px;">
+            Permanently deletes all exercises, sets, weights, and history from local storage.
+          </p>
+          <button type="button" class="btn btn-danger-outline btn-sm" id="resetDataBtn">
+            Reset All Data to Clean Slate
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <script src="loadr.js"></script>
+<script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
